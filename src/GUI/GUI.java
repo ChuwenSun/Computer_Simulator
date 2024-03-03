@@ -234,7 +234,7 @@ public class GUI {
         btnHalt.addActionListener((new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (e.getSource() == btnRun) {
+                if (e.getSource() == btnHalt) {
                     //call the bus to halt
                     simulator.bus.halt();
                     //update front end values
@@ -242,7 +242,51 @@ public class GUI {
                 }
             }
         }));
+
+        btnLoad.addActionListener((new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == btnLoad) {
+                    //load button take the Memory[MAR.value] and give that value to MBR
+                    int marVal = simulator.CPU.MAR.getValue();
+                    simulator.CPU.MBR.setValue(simulator.memory.get(marVal));
+                    //update front end values
+                    updateRegisterValues(simulator);
+                }
+            }
+        }));
+
+        btnStore.addActionListener((new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == btnStore) {
+                    //store button make Memory[MAR.value] = MBR.value
+                    int marVal = simulator.CPU.MAR.getValue();
+                    int mbrVal = simulator.CPU.MBR.getValue();
+                    simulator.memory.set(marVal, mbrVal);
+                    //update front end values
+                    updateRegisterValues(simulator);
+                }
+            }
+        }));
+
+        expandCheckbox.addActionListener((new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == expandCheckbox) {
+
+                    //based on the status of the expand check box to decide the size of memory: 2048 // 4096
+                    if (expandCheckbox.isSelected()){
+                        simulator.memory.expandSize();
+                    }else{
+                        simulator.memory.resumeSize();
+                    }
+                }
+            }
+        }));
     }
+
+
     /**
      * add Action Listeners for Binary to Octal Conversion, and Octal to Binary Conversion
      *

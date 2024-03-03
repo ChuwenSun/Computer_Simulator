@@ -24,6 +24,7 @@ public class Bus {
         while(!isHalt){
             step();
         }
+        isHalt = false;
     }
 
     /**
@@ -32,6 +33,7 @@ public class Bus {
      */
     public void halt(){
         isHalt = true;
+//        CPU.PC.setValue(0);
     }
     /**
      * Run current instruction based on where PC(Program Counter Register) is.
@@ -82,7 +84,7 @@ public class Bus {
         switch (decoder.getOpcode()){
             case 0: {
                 //Run Halt
-                isHalt = true;
+                halt();
                 break;
             }
             //OpCode 01, LDR, r <- c(EA)
