@@ -52,4 +52,10 @@ public class Simulator {
             e.printStackTrace();
         }
     }
+
+    public void refreshSimulator(){
+        memory = new Memory();
+        CPU = new CPU_Registers();
+        bus = new Bus(CPU, memory);
+    }
 }

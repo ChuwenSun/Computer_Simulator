@@ -111,6 +111,7 @@ public class GUI {
     private void updateRegisterValues(Simulator simulator){
         CPU_Registers CPU = simulator.CPU;
         valueR0.setText(CPU.R0.toBinaryStringWithLeadingZeros());
+        System.out.println("valueR0 set to " + CPU.R0.toBinaryStringWithLeadingZeros());
         valueR1.setText(CPU.R1.toBinaryStringWithLeadingZeros());
         valueR2.setText(CPU.R2.toBinaryStringWithLeadingZeros());
         valueR3.setText(CPU.R3.toBinaryStringWithLeadingZeros());
@@ -125,11 +126,11 @@ public class GUI {
         valueMBR.setText(CPU.MBR.toBinaryStringWithLeadingZeros());
         valueMFR.setText(CPU.MFR.toBinaryStringWithLeadingZeros());
 
+        String cc0 = CPU.cc0.get() ? "1" : "0";
         String cc1 = CPU.cc1.get() ? "1" : "0";
         String cc2 = CPU.cc2.get() ? "1" : "0";
         String cc3 = CPU.cc3.get() ? "1" : "0";
-        String cc4 = CPU.cc4.get() ? "1" : "0";
-        String cc = cc1 + cc2 + cc3 + cc4;
+        String cc = cc0 + cc1 + cc2 + cc3;
         valueCC.setText(cc);
     }
     /**
@@ -200,8 +201,12 @@ public class GUI {
                     if (select == IPLFileChooser.APPROVE_OPTION) {
                         File IPLFile = IPLFileChooser.getSelectedFile();
                         System.out.println("IPL: " + IPLFile.getName());
+
+                        //refresh the computer whenever IPL is clicked
+                        simulator.refreshSimulator();
                         // Call the simulator to load memory with input file
                         simulator.loadMemory(IPLFile);
+                        updateRegisterValues(simulator);
                     }
                 }
             }

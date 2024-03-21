@@ -112,6 +112,27 @@ public class Bus {
                 memory.set(ea, CPU.getIX(decoder.getIX()).getValue());
                 break;
             }
+            //Opcode 44, SETCCE If c(r) = 0, the E bit of the condition code is set to 1, else the E bit of the condition code is set to 0(E bit is CC3)
+            case 44: {
+                if(CPU.getR(decoder.getR()).getValue() == 0){
+                    CPU.getCC(3).set(true);
+                }else{
+                    CPU.getCC(3).set(false);
+                }
+                break;
+            }
+            //Opcode 06, JZ, Jump If Zero:
+            //If the E bit of CC is 1, then PC <- EA
+            //Else PC <- PC+1
+            case 6: {
+                if(CPU.getCC(3).get()){
+                    CPU.PC.setValue(ea);
+                }else{
+                    //CPU.PC.stepForward();
+                    //No need to increment PC, PC will get incremented in step()
+                }
+                break;
+            }
             default:
                 break;
         }
