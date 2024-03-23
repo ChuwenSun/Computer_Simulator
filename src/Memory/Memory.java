@@ -141,6 +141,11 @@ public class Memory{
         cache.updateCacheConsole(cacheConsole);
     }
 
+    public void resetMem(){
+        memory.clear();
+        cache.resetCache();
+
+    }
 
 
 

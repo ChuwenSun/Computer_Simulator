@@ -202,9 +202,11 @@ public class GUI {
                     if (select == IPLFileChooser.APPROVE_OPTION) {
                         File IPLFile = IPLFileChooser.getSelectedFile();
                         System.out.println("IPL: " + IPLFile.getName());
-
+                        //simulator = new Simulator();
                         //refresh the computer whenever IPL is clicked
-//                        simulator.refreshSimulator();
+                        simulator.refreshSimulator();
+                        valueOctal.setText("");
+                        valueBinary.setText("");
                         // Call the simulator to load memory with input file
                         simulator.loadMemory(IPLFile);
                         updateRegisterValues(simulator);

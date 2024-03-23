@@ -103,4 +103,16 @@ public class Cache {
         });
 
     }
+
+    public void resetCache(){
+        cacheBlocks.clear();
+        for(int i = 0; i < sizeCache; i++){
+            ArrayList<Integer> line = new ArrayList<>();
+            for(int j = 0; j < sizeLine; j++){
+                line.add(0);
+            }
+            this.cacheBlocks.put(String.valueOf(-i-1), line);
+
+        }
+    }
 }

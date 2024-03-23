@@ -95,4 +95,27 @@ public class CPU_Registers {
             }
         };
     }
+
+    public void resetCPU(){
+        cc0.resetCC();
+        cc1.resetCC();
+        cc2.resetCC();
+        cc3.resetCC();
+
+        R1.resetRegister();
+        R0.resetRegister();
+        R2.resetRegister();
+        R3.resetRegister();
+
+        X1.resetRegister();
+        X2.resetRegister();
+        X3.resetRegister();
+
+        IR.resetRegister();
+        MAR.resetRegister();
+        MBR.resetRegister();
+        MFR.resetRegister();
+        PC.resetRegister();
+        decoder.resetDecoder();
+    }
 }

@@ -72,4 +72,12 @@ public class instructionDecoder {
     public int getAddress() {
         return address;
     }
+
+    public void resetDecoder(){
+        opcode = 0;
+        R = 0;
+        IX = 0;
+        I = 0;
+        address = 0;
+    }
 }

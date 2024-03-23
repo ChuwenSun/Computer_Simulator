@@ -55,8 +55,8 @@ public class Simulator {
 
     public void refreshSimulator(){
         System.out.println("IM DONE!!!");
-        memory = new Memory();
-        CPU = new CPU_Registers();
-        bus = new Bus(CPU, memory);
+        memory.resetMem();
+        CPU.resetCPU();
+        bus.resetBus();
     }
 }

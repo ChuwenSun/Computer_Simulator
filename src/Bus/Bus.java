@@ -143,5 +143,8 @@ public class Bus {
 
     }
 
+    public void resetBus(){
+        isHalt = false;
+    }
 
 }

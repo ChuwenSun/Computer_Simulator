@@ -15,4 +15,8 @@ public class CC{
     public void set(boolean val){
         this.cc = val;
     }
+
+    public void resetCC(){
+        set(false);
+    }
 }

@@ -65,4 +65,8 @@ public class Register {
             System.out.println("ERROR: No value was sent into " + name + "!!! " + Integer.toBinaryString(val) + "(" + val + ") is out of bounds.");
         }
     }
+
+    public void resetRegister(){
+        value = 0;
+    }
 }
