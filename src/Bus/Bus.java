@@ -1,5 +1,6 @@
 package Bus;
 
+import CPU.CC;
 import CPU.CPU_Registers;
 import CPU.instructionDecoder;
 import Memory.Memory;
@@ -112,8 +113,8 @@ public class Bus {
                 memory.set(ea, CPU.getIX(decoder.getIX()).getValue());
                 break;
             }
-            //Opcode 44, SETCCE If c(r) = 0, the E bit of the condition code is set to 1, else the E bit of the condition code is set to 0(E bit is CC3)
-            case 44: {
+            //Opcode 44(36 in decimal), SETCCE If c(r) = 0, the E bit of the condition code is set to 1, else the E bit of the condition code is set to 0(E bit is CC3)
+            case 36: {
                 if(CPU.getR(decoder.getR()).getValue() == 0){
                     CPU.getCC(3).set(true);
                 }else{
@@ -125,13 +126,154 @@ public class Bus {
             //If the E bit of CC is 1, then PC <- EA
             //Else PC <- PC+1
             case 6: {
-                if(CPU.getCC(3).get()){
+                if (CPU.getCC(3).get()) {
                     CPU.PC.setValue(ea);
-                }else{
+                } else {
                     //CPU.PC.stepForward();
                     //No need to increment PC, PC will get incremented in step()
                 }
                 break;
+            }
+            //JNE
+            case 7: {
+                if (!CPU.getCC(3).get()){
+                    CPU.PC.setValue(ea);
+                }else{
+
+                }
+            }
+            //Opcode 10(8 in decimal) JCC
+            // JCC cc, x, address[,I],
+            // Jump If Condition Code
+            //cc replaces r for this instruction
+            //cc takes values 0, 1, 2, 3 as above and specifies the bit in the Condition Code Register to check;
+            //If cc bit  = 1, PC  EA
+            //Else PC <- PC + 1
+            case 8: {
+                if (CPU.getCC(decoder.getR()).get()){
+                    CPU.PC.setValue(ea);
+                }else{
+
+                }
+            }
+            //Opcode 11(9 in decimal) JMA, unconditional jump
+            case 9:{
+                CPU.PC.setValue(ea);
+            }
+            //Opcode 12(10 in decimal) JSR, PC already incremented,
+//            R3 <- PC+1;
+//            PC <- EA
+            case 10:{
+                CPU.getR(3).setValue(CPU.PC.getValue());
+                CPU.PC.setValue(ea);
+            }
+            //Opcode 13(11 in decimal), RFS Immed
+            //R0 <- Immed; PC <- c(R3)
+            case 11:{
+                CPU.getR(0).setValue(decoder.getAddress());
+                CPU.PC.setValue(CPU.getR(3).getValue());
+            }
+            //Opcode 14(12 in decimal), SOB
+            case 12:{
+                CPU.getR(decoder.getR()).setValue(CPU.getR(decoder.getR()).getValue() - 1);
+
+                if (CPU.getR(decoder.getR()).getValue() > 0){
+                    CPU.PC.setValue(ea);
+                }else{
+
+                }
+            }
+            //Opcode 15(13 in decimal), JGE
+            case 13:{
+                if (CPU.getR(decoder.getR()).getValue() >= 0){
+                    CPU.PC.setValue(ea);
+                }else{
+
+                }
+            }
+            //Opcode 16(14 in decimal), AMR
+            case 14:{
+                int result = CPU.getR(decoder.getR()).getValue() + memory.get(ea);
+//                if (result > ), Java Integer will overflow first, so no need to set OVERFLOW flag here
+                CPU.getR(decoder.getR()).setValue(result);
+            }
+            //Opcode 17(15 in decimal), SMR
+            case 15:{
+                int result = CPU.getR(decoder.getR()).getValue() - memory.get(ea);
+                if (result < 0){
+                    //UNDERFLOW
+                    CPU.getCC(1).set(true);
+                }else {
+                    CPU.getR(decoder.getR()).setValue(result);
+                }
+
+            }
+            //Opcode 20(16 in decimal), AIR
+            case 16:{
+                CPU.getR(decoder.getR()).setValue(CPU.getR(decoder.getR()).getValue() + decoder.getAddress());
+            }
+            //Opcode 21(17 in decimal), SIR
+            case 17:{
+                int result = CPU.getR(decoder.getR()).getValue() - decoder.getAddress();
+                if (result < 0){
+                    //UNDERFLOW
+                    CPU.getCC(1).set(true);
+                }else{
+                    CPU.getR(decoder.getR()).setValue(result);
+                }
+
+            }
+            //Opcode 22(18 in decimal), MLT
+            case 18: {
+                // Perform the multiplication using long to avoid overflow within the operation itself
+                long result = (long) CPU.getR(decoder.getRx(true)).getValue() * CPU.getR(decoder.getRy(true)).getValue();
+
+                // Convert the result to a binary string with leading zeros to ensure it's properly formatted
+                 // Use 64 bits to ensure no data loss
+
+                // Check if the binary string length exceeds 32 bits for the actual result
+                if (result > 0xFFFFFFFFL) {
+                    CPU.getCC(0).set(true);
+                } else {
+                    String fullBinaryStr = toBinaryStringWithLeadingZeros(result, 32);
+                    // Split the 32-bit result into two 16-bit parts and set them into the registers
+                    CPU.getR(decoder.getRx(true)).setValue(Integer.parseInt(fullBinaryStr.substring(0, 16), 2));
+                    CPU.getR(decoder.getRx(true) + 1).setValue(Integer.parseInt(fullBinaryStr.substring(16, 32), 2));
+                }
+            }
+            //Opcode 23(19 in decimal), DVD
+            case 19: {
+                if (CPU.getR(decoder.getRy(true)).getValue() == 0){
+                    CPU.getCC(2).set(true);
+                }else {
+                    int quotient = CPU.getR(decoder.getRx(true)).getValue() / CPU.getR(decoder.getRy(true)).getValue();
+                    int reminder = CPU.getR(decoder.getRx(true)).getValue() % CPU.getR(decoder.getRy(true)).getValue();
+                    CPU.getR(decoder.getRx(true)).setValue(quotient);
+                    CPU.getR(decoder.getRx(true) + 1).setValue(reminder);
+                }
+            }
+            //Opcode 24(20 in decimal), TRR
+            case 20: {
+                if (CPU.getR(decoder.getRx(false)).getValue() == CPU.getR(decoder.getRy(false)).getValue()){
+                    CPU.getCC(3).set(true);
+                }else{
+                    CPU.getCC(3).set(false);
+                }
+            }
+            //Opcode 25(21 in decimal), AND
+            case 21: {
+                int result = CPU.getR(decoder.getRx(false)).getValue() & CPU.getR(decoder.getRy(false)).getValue();
+                CPU.getR(decoder.getRx(false)).setValue(result);
+            }
+            //Opcode 26(22 in decimal), ORR
+            case 22: {
+                int result = CPU.getR(decoder.getRx(false)).getValue() | CPU.getR(decoder.getRy(false)).getValue();
+                CPU.getR(decoder.getRx(false)).setValue(result);
+            }
+            //Opcode 27(23 in decimal), NOT
+            case 23: {
+                int result = ~CPU.getR(decoder.getRx(false)).getValue();
+                CPU.getR(decoder.getRx(false)).setValue(result);
             }
             default:
                 break;
@@ -142,7 +284,18 @@ public class Bus {
 
 
     }
+    public String toBinaryStringWithLeadingZeros(long value, int length) {
+        String binaryString = Long.toBinaryString(value);
+        int zerosNeeded = length - binaryString.length();
 
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < zerosNeeded; i++) {
+            result.append("0");
+        }
+        result.append(binaryString);
+
+        return result.toString();
+    }
     public void resetBus(){
         isHalt = false;
     }

@@ -73,6 +73,22 @@ public class instructionDecoder {
         return address;
     }
 
+    public int getRx(boolean ZeroOrTwo){
+        if(ZeroOrTwo && R != 0 && R != 2){
+            System.out.println("Error!!!! rx must be 0 or 2!!!");
+            return -1;
+        }
+        return R;
+    }
+
+    public int getRy(boolean ZeroOrTwo){
+        if(ZeroOrTwo && IX != 0 && IX != 2){
+            System.out.println("Error!!!! ry must be 0 or 2!!!");
+            return -1;
+        }
+        return R;
+    }
+
     public void resetDecoder(){
         opcode = 0;
         R = 0;
