@@ -69,7 +69,7 @@ public class GUI {
     private JButton btnStep;
     private JButton btnHalt;
     private JTextArea consoleTitle;
-    private JTextArea consoleLogger;
+    private JTextArea cacheConsole;
     private JCheckBox expandCheckbox;
     private JFileChooser IPLFileChooser = new JFileChooser();
     public GUI(){
@@ -102,7 +102,7 @@ public class GUI {
         valueCC.setEditable(false);
 
         consoleTitle.setEditable(false);
-        consoleLogger.setEditable(false);
+        cacheConsole.setEditable(true);
     }
 
     /**
@@ -132,6 +132,7 @@ public class GUI {
         String cc3 = CPU.cc3.get() ? "1" : "0";
         String cc = cc0 + cc1 + cc2 + cc3;
         valueCC.setText(cc);
+        simulator.memory.updateCacheConsole(cacheConsole);
     }
     /**
      * Helper method for Binary to Octal conversion
@@ -203,7 +204,7 @@ public class GUI {
                         System.out.println("IPL: " + IPLFile.getName());
 
                         //refresh the computer whenever IPL is clicked
-                        simulator.refreshSimulator();
+//                        simulator.refreshSimulator();
                         // Call the simulator to load memory with input file
                         simulator.loadMemory(IPLFile);
                         updateRegisterValues(simulator);
@@ -404,16 +405,35 @@ public class GUI {
      *
      */
     public static void main(String args[]) {
-        JFrame jFrame = new JFrame("Team 6 Computer Simulator.Simulator");
-        GUI gui = new GUI();
-        Simulator simulator = new Simulator();
-        //CPU_Registers CPU = new CPU_Registers();
-        gui.setInputLimiter();
-        gui.updateRegisterValues(simulator);
-        gui.addActionListeners(simulator);
-        jFrame.setContentPane(gui.mainPanel);
-        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        jFrame.pack();
-        jFrame.setVisible(true);
+//        JFrame jFrame = new JFrame("Team 6 Computer Simulator.Simulator");
+//        GUI gui = new GUI();
+//        Simulator simulator = new Simulator();
+//        //CPU_Registers CPU = new CPU_Registers();
+//        gui.setInputLimiter();
+//        gui.updateRegisterValues(simulator);
+//        gui.addActionListeners(simulator);
+//        jFrame.setContentPane(gui.mainPanel);
+//        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        jFrame.pack();
+//        jFrame.setVisible(true);
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                // Initialize the GUI components
+                GUI gui = new GUI();
+                Simulator simulator = new Simulator();
+                gui.setInputLimiter();
+                gui.updateRegisterValues(simulator);
+                gui.addActionListeners(simulator);
+
+                // Create the JFrame with title
+                JFrame jFrame = new JFrame("Team 6 Computer Simulator.Simulator");
+
+                // Set up the JFrame
+                jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                jFrame.setContentPane(gui.mainPanel);
+                jFrame.pack();
+                jFrame.setVisible(true);
+            }
+        });
     }
 }

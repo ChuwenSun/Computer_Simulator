@@ -1,5 +1,11 @@
 package Memory;
 
+import CPU.Cache.Cache;
+
+import javax.swing.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -10,6 +16,7 @@ public class Memory{
 
     //The main hashmap object for the memory<mem location, value>
     HashMap<Integer, Integer> memory;
+    Cache cache;
 
     //The int object to store the size of the memory, can be 2048 or 4096 in this project
     private int memorySize = 2048;
@@ -19,6 +26,7 @@ public class Memory{
     //Constructor method for the memory object
     public Memory(){
         memory = new HashMap<>();
+        cache = new Cache();
     }
 
     //Expand the memory size to 4096
@@ -70,7 +78,8 @@ public class Memory{
      */
     public void set(int addressInt, int valueInt){
         if (addressInt < memorySize){
-            memory.put(addressInt, valueInt);
+            ArrayList<Integer> currentLine = getCurrentLine(addressInt);
+            memory.put(addressInt, cache.setValue(addressInt, valueInt, currentLine));
             logger.info("Memory " + Integer.toBinaryString(addressInt) + "(" + addressInt + ") " + "GOT the value " + Integer.toBinaryString(valueInt) + "(" + valueInt + ")");
             System.out.println("Memory " + Integer.toBinaryString(addressInt) + "(" + addressInt + ") " + "GOT the value " + Integer.toBinaryString(valueInt) + "(" + valueInt + ")");
         }else{
@@ -82,13 +91,12 @@ public class Memory{
      * get a memory value with a address, address is in decimal and it is a int
      */
     public int get(int address){
-        if (memory.containsKey(address)){
-            return memory.get(address);
-        }
-        else{
-            logger.severe("FAILED!!! No value is in " + address + "(" + address + "). Failed to get the value from memory location. 0?");
-            System.out.println("FAILED!!! No value is in " + address + "(" + address + "). Failed to get the value from memory location. 0?");
-            return 0;
+        if(address < memorySize){
+            ArrayList<Integer> currentLine = getCurrentLine(address);
+            return cache.getValue(address, currentLine);
+        }else{
+            System.out.println("FAILED!!! Trying to get memory address out-of-bounds!  " + address + "(" + address + "). -1 returned");
+            return -1;
         }
     }
 
@@ -97,14 +105,7 @@ public class Memory{
      */
     public int get(String address){
         int addressInt = Integer.valueOf(address, 2);
-        if (memory.containsKey(addressInt)){
-            return memory.get(addressInt);
-        }
-        else{
-            logger.severe("No value is in " + address + "(" + addressInt + "). returned 0");
-            System.out.println("No value is in " + address + "(" + addressInt + "). returned 0");
-            return 0;
-        }
+        return get(addressInt);
     }
     /**
      * Debug/Logging method, print out all the memory values that are not 0
@@ -116,6 +117,28 @@ public class Memory{
         }
         logger.info("Finished Printing all the values");
         System.out.println("Finished Printing all the values");
+    }
+
+    /**
+     *  Get the current line of 8 values in the current operating address
+     */
+    public ArrayList<Integer> getCurrentLine(int addressInt){
+        ArrayList<Integer> currentLine = new ArrayList<>();
+        int i = addressInt - addressInt % 8;
+        for(int j = 0; j < 8; j++){
+
+            if(memory.containsKey(i)){
+                currentLine.add(memory.get(i));
+            }else{
+                currentLine.add(0);
+            }
+            i++;
+        }
+        return currentLine;
+    }
+
+    public void updateCacheConsole(JTextArea cacheConsole){
+        cache.updateCacheConsole(cacheConsole);
     }
 
 
