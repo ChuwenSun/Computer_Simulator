@@ -88,6 +88,33 @@ public class instructionDecoder {
         }
         return R;
     }
+    public String toBinaryStringWithLeadingZeros(int decimalValue, int length) {
+        String binaryString = Integer.toBinaryString(decimalValue);
+        int zerosNeeded = length - binaryString.length();
+
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < zerosNeeded; i++) {
+            result.append("0");
+        }
+        result.append(binaryString);
+        return result.toString();
+    }
+    public boolean getAorL(){
+        String IXBinaryString = toBinaryStringWithLeadingZeros(IX, 2);
+        return IXBinaryString.charAt(0) == '1';
+    }
+
+    public boolean getLorR(){
+        String IXBinaryString = toBinaryStringWithLeadingZeros(IX, 2);
+        return IXBinaryString.charAt(1) == '1';
+    }
+
+    public int getCount(){
+        String addressBinaryString = toBinaryStringWithLeadingZeros(address, 5);
+        String countBinaryString = addressBinaryString.substring(1,5);
+        return Integer.valueOf(countBinaryString, 2);
+    }
+
 
     public void resetDecoder(){
         opcode = 0;

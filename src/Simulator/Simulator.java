@@ -2,8 +2,10 @@ package Simulator;
 
 import Bus.Bus;
 import CPU.CPU_Registers;
+import GUI.GUI;
 import Memory.Memory;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -25,6 +27,7 @@ public class Simulator {
         CPU = new CPU_Registers();
         bus = new Bus(CPU, memory);
     }
+
     /**
      * Load the memory with the input file
      */
@@ -58,5 +61,10 @@ public class Simulator {
         memory.resetMem();
         CPU.resetCPU();
         bus.resetBus();
+    }
+
+
+    public void getOutputConsole(JTextArea outputConsole) {
+        bus.setOutputConsole(outputConsole);
     }
 }

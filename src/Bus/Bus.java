@@ -1,9 +1,12 @@
 package Bus;
 
-import CPU.CC;
 import CPU.CPU_Registers;
 import CPU.instructionDecoder;
+import GUI.IO_Devices;
 import Memory.Memory;
+
+import javax.swing.*;
+
 /**
  * The Bus Class that is responsible for Run(), Step() and Halt().
  */
@@ -11,11 +14,19 @@ public class Bus {
     private CPU_Registers CPU;
     private Memory memory;
     private boolean isHalt;
+
+    private IO_Devices keyboardIO = new IO_Devices("Keyboard");
+    private JTextArea outputConsole;
     public Bus(CPU_Registers CPU, Memory memory){
         this.CPU = CPU;
         this.memory = memory;
         this.isHalt = false;
     }
+
+    public void setOutputConsole(JTextArea outputConsole){
+        this.outputConsole = outputConsole;
+    }
+
 
     /**
      * Run step() until a HALT is met. (Clicking the Run button will bring the program here)
@@ -141,6 +152,7 @@ public class Bus {
                 }else{
 
                 }
+                break;
             }
             //Opcode 10(8 in decimal) JCC
             // JCC cc, x, address[,I],
@@ -155,10 +167,12 @@ public class Bus {
                 }else{
 
                 }
+                break;
             }
             //Opcode 11(9 in decimal) JMA, unconditional jump
             case 9:{
                 CPU.PC.setValue(ea);
+                break;
             }
             //Opcode 12(10 in decimal) JSR, PC already incremented,
 //            R3 <- PC+1;
@@ -166,12 +180,14 @@ public class Bus {
             case 10:{
                 CPU.getR(3).setValue(CPU.PC.getValue());
                 CPU.PC.setValue(ea);
+                break;
             }
             //Opcode 13(11 in decimal), RFS Immed
             //R0 <- Immed; PC <- c(R3)
             case 11:{
                 CPU.getR(0).setValue(decoder.getAddress());
                 CPU.PC.setValue(CPU.getR(3).getValue());
+                break;
             }
             //Opcode 14(12 in decimal), SOB
             case 12:{
@@ -182,6 +198,7 @@ public class Bus {
                 }else{
 
                 }
+                break;
             }
             //Opcode 15(13 in decimal), JGE
             case 13:{
@@ -190,12 +207,14 @@ public class Bus {
                 }else{
 
                 }
+                break;
             }
             //Opcode 16(14 in decimal), AMR
             case 14:{
                 int result = CPU.getR(decoder.getR()).getValue() + memory.get(ea);
 //                if (result > ), Java Integer will overflow first, so no need to set OVERFLOW flag here
                 CPU.getR(decoder.getR()).setValue(result);
+                break;
             }
             //Opcode 17(15 in decimal), SMR
             case 15:{
@@ -206,11 +225,12 @@ public class Bus {
                 }else {
                     CPU.getR(decoder.getR()).setValue(result);
                 }
-
+                break;
             }
             //Opcode 20(16 in decimal), AIR
             case 16:{
                 CPU.getR(decoder.getR()).setValue(CPU.getR(decoder.getR()).getValue() + decoder.getAddress());
+                break;
             }
             //Opcode 21(17 in decimal), SIR
             case 17:{
@@ -221,7 +241,7 @@ public class Bus {
                 }else{
                     CPU.getR(decoder.getR()).setValue(result);
                 }
-
+                break;
             }
             //Opcode 22(18 in decimal), MLT
             case 18: {
@@ -240,6 +260,7 @@ public class Bus {
                     CPU.getR(decoder.getRx(true)).setValue(Integer.parseInt(fullBinaryStr.substring(0, 16), 2));
                     CPU.getR(decoder.getRx(true) + 1).setValue(Integer.parseInt(fullBinaryStr.substring(16, 32), 2));
                 }
+                break;
             }
             //Opcode 23(19 in decimal), DVD
             case 19: {
@@ -251,6 +272,7 @@ public class Bus {
                     CPU.getR(decoder.getRx(true)).setValue(quotient);
                     CPU.getR(decoder.getRx(true) + 1).setValue(reminder);
                 }
+                break;
             }
             //Opcode 24(20 in decimal), TRR
             case 20: {
@@ -259,21 +281,105 @@ public class Bus {
                 }else{
                     CPU.getCC(3).set(false);
                 }
+                break;
             }
             //Opcode 25(21 in decimal), AND
             case 21: {
                 int result = CPU.getR(decoder.getRx(false)).getValue() & CPU.getR(decoder.getRy(false)).getValue();
                 CPU.getR(decoder.getRx(false)).setValue(result);
+                break;
             }
             //Opcode 26(22 in decimal), ORR
             case 22: {
                 int result = CPU.getR(decoder.getRx(false)).getValue() | CPU.getR(decoder.getRy(false)).getValue();
                 CPU.getR(decoder.getRx(false)).setValue(result);
+                break;
             }
             //Opcode 27(23 in decimal), NOT
             case 23: {
                 int result = ~CPU.getR(decoder.getRx(false)).getValue();
                 CPU.getR(decoder.getRx(false)).setValue(result);
+                break;
+            }
+            //Opcode 30(24 in decimal), SRC
+            case 24:{
+                int value = CPU.getR(decoder.getR()).getValue();
+                int count = decoder.getCount();
+                if(!decoder.getAorL()){
+
+                    if (decoder.getLorR()){
+                        //Arithmetically left shift
+                        String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
+                        String signBit = binaryStr.substring(0, 1);
+                        binaryStr = binaryStr.substring(1,16);
+                        for(int i = 0; i < count; i++){
+                            binaryStr = binaryStr + "0";
+                        }
+                        value = Integer.valueOf(signBit + binaryStr.substring(count), 2);
+                    }else if(!decoder.getLorR()){
+                        //Arithmetically right shift
+                        String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
+                        String signBit = binaryStr.substring(0, 1);
+                        binaryStr = binaryStr.substring(1,16);
+                        for(int i = 0; i < count; i++){
+                            binaryStr = "0" + binaryStr;
+                        }
+                        value = Integer.valueOf(signBit + binaryStr.substring(0, 15), 2);
+                    }
+
+                }else if(decoder.getAorL()){
+                    if(decoder.getLorR()){
+                        //Logically left shift
+                        String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
+                        for(int i = 0; i < count; i++){
+                            binaryStr = binaryStr + "0";
+                        }
+                        value = Integer.valueOf(binaryStr.substring(count),2);
+                    }else if(!decoder.getLorR()){
+                        //Logically right shift
+                        String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
+                        for(int i = 0; i < count; i++){
+                            binaryStr = "0" + binaryStr;
+                        }
+                        value = Integer.valueOf(binaryStr.substring(0, 16),2);
+                    }
+                }
+                CPU.getR(decoder.getR()).setValue(value);
+                break;
+            }
+            //Opcode 31(25 in decimal), RRC
+            case 25:{
+                int value = CPU.getR(decoder.getR()).getValue();
+                int count = decoder.getCount();
+                String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
+
+
+                for(int i = 0; i < count; i++){
+                    if(decoder.getLorR()){
+                        // Left rotate
+                        binaryStr = binaryStr.substring(1) + binaryStr.charAt(0);
+                    }else{
+                        // Right rotate
+                        binaryStr = binaryStr.charAt(15) + binaryStr.substring(0, 15);
+                    }
+                }
+                value = Integer.parseInt(binaryStr, 2);
+                CPU.getR(decoder.getR()).setValue(value);
+                break;
+            }
+            //Opcode 32(26 in decimal), IN
+            case 26:{
+                keyboardIO.askForInput("Please input a value: ");
+                String input = keyboardIO.getValue();
+                int decimalValue = Integer.parseInt(input);
+                CPU.getR(decoder.getR()).setValue(decimalValue);
+                break;
+            }
+            //Opcode 33(27 in decimal), OUT
+            case 27:{
+                int value = CPU.getR(decoder.getR()).getValue();
+                outputConsole.append("OUT: " + Integer.toString(value) + "\n");
+                break;
             }
             default:
                 break;

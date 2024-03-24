@@ -14,6 +14,7 @@ import java.io.File;
  * Main Method of the Program is included in this file
  */
 public class GUI {
+    private IO_Devices keyboardIO = new IO_Devices("Keyboard");
     private JPanel mainPanel;
     private JPanel westPanel;
     private JPanel eastPanel;
@@ -68,12 +69,20 @@ public class GUI {
     private JButton btnRun;
     private JButton btnStep;
     private JButton btnHalt;
-    private JTextArea consoleTitle;
+    private JTextArea cacheTitle;
     private JTextArea cacheConsole;
     private JCheckBox expandCheckbox;
+    private JTextArea OutputConsoleTitle;
+    private JTextArea outputConsole;
+    private JTextField inputField;
+    private JButton testBtn;
     private JFileChooser IPLFileChooser = new JFileChooser();
     public GUI(){
 
+    }
+
+    private JTextArea getOutputConsole(){
+        return this.outputConsole;
     }
 
     /**
@@ -101,8 +110,12 @@ public class GUI {
         valueMFR.setEditable(false);
         valueCC.setEditable(false);
 
-        consoleTitle.setEditable(false);
-        cacheConsole.setEditable(true);
+        cacheTitle.setEditable(false);
+        cacheConsole.setEditable(false);
+        OutputConsoleTitle.setEditable(false);
+        outputConsole.setEditable(false);
+        inputField.setEditable(false);
+        inputField.setText("INPUT NOT AVAILABLE NOW");
     }
 
     /**
@@ -235,6 +248,17 @@ public class GUI {
                     simulator.bus.step();
                     //update front end values
                     updateRegisterValues(simulator);
+                }
+            }
+        }));
+        testBtn.addActionListener((new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == testBtn) {
+                    keyboardIO.askForInput("Please input a value: ");
+                    String input = keyboardIO.getValue();
+                    int decimalValue = Integer.parseInt(input);
+                    outputConsole.setText(Integer.toString(decimalValue));
                 }
             }
         }));
@@ -423,10 +447,11 @@ public class GUI {
                 // Initialize the GUI components
                 GUI gui = new GUI();
                 Simulator simulator = new Simulator();
+
                 gui.setInputLimiter();
                 gui.updateRegisterValues(simulator);
                 gui.addActionListeners(simulator);
-
+                simulator.getOutputConsole(gui.getOutputConsole());
                 // Create the JFrame with title
                 JFrame jFrame = new JFrame("Team 6 Computer Simulator.Simulator");
 
