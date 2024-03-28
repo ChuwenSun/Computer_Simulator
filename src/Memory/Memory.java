@@ -61,9 +61,32 @@ public class Memory{
      * Set a memory address with a value, both parameter are in octal, they are Strings
      */
     public void octalSet(String octalAddress, String octalValue){
-        String address = octalToBinary(octalAddress);
-        String value = octalToBinary(octalValue);
-        binarySet(address, value);
+//        String address = octalToBinary(octalAddress);
+//        String value = octalToBinary(octalValue);
+//        binarySet(address, value);
+        int address = octalTo16Bit2sComplementInt(octalAddress);
+        int value = octalTo16Bit2sComplementInt(octalValue);
+        set(address, value);
+    }
+    public static int octalTo16Bit2sComplementInt(String octalStr) {
+        // Convert octal string to a decimal integer
+        int decimalValue = Integer.parseInt(octalStr, 8);
+
+        // Convert the decimal to a "regular" 16-bit binary string, with zero-padding if necessary
+        String binaryStr = String.format("%16s", Integer.toBinaryString(decimalValue & 0xFFFF)).replace(' ', '0');
+
+        // Convert the 16-bit binary string to a 2's complement integer value
+        int twosComplementValue = Integer.parseUnsignedInt(binaryStr, 2);
+        if (binaryStr.charAt(0) == '1') { // Check if the leading bit indicates a negative value
+            twosComplementValue = -1 * ((1 << 16) - twosComplementValue); // Convert using 2's complement logic
+        }
+
+        return twosComplementValue;
+    }
+
+    public static String intTo16Bit2sComplementBinaryString(int number) {
+        // Convert the integer to a 16-bit 2's complement binary string
+        return String.format("%16s", Integer.toBinaryString(number & 0xFFFF)).replace(' ', '0');
     }
     /**
      * Set a memory address with a value, both parameter are in binary, they are Strings
@@ -80,11 +103,11 @@ public class Memory{
         if (addressInt < memorySize){
             ArrayList<Integer> currentLine = getCurrentLine(addressInt);
             memory.put(addressInt, cache.setValue(addressInt, valueInt, currentLine));
-            logger.info("Memory " + Integer.toBinaryString(addressInt) + "(" + addressInt + ") " + "GOT the value " + Integer.toBinaryString(valueInt) + "(" + valueInt + ")");
-            System.out.println("Memory " + Integer.toBinaryString(addressInt) + "(" + addressInt + ") " + "GOT the value " + Integer.toBinaryString(valueInt) + "(" + valueInt + ")");
+            logger.info("Memory " + intTo16Bit2sComplementBinaryString(addressInt) + "(" + addressInt + ") " + "GOT the value " + intTo16Bit2sComplementBinaryString(valueInt) + "(" + valueInt + ")");
+            System.out.println("Memory " + intTo16Bit2sComplementBinaryString(addressInt) + "(" + addressInt + ") " + "GOT the value " + intTo16Bit2sComplementBinaryString(valueInt) + "(" + valueInt + ")");
         }else{
-            logger.severe("FAILED!!! Invalid Memory.Memory address " + Integer.toBinaryString(addressInt) + "(" + addressInt + "). " + "The value " + Integer.toBinaryString(valueInt) + "(" + valueInt + ") was not ingested into the memory location");
-            System.out.println("FAILED!!! Invalid Memory.Memory address " + Integer.toBinaryString(addressInt) + "(" + addressInt + "). " + "The value " + Integer.toBinaryString(valueInt) + "(" + valueInt + ") was not ingested into the memory location");
+            logger.severe("FAILED!!! Invalid Memory.Memory address " + intTo16Bit2sComplementBinaryString(addressInt) + "(" + addressInt + "). " + "The value " + intTo16Bit2sComplementBinaryString(valueInt) + "(" + valueInt + ") was not ingested into the memory location");
+            System.out.println("FAILED!!! Invalid Memory.Memory address " + intTo16Bit2sComplementBinaryString(addressInt) + "(" + addressInt + "). " + "The value " + intTo16Bit2sComplementBinaryString(valueInt) + "(" + valueInt + ") was not ingested into the memory location");
         }
     }
     /**

@@ -1,11 +1,15 @@
 package CPU;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * This is the Instruction Decoder class. It is responsible to indentify opcode, R, IX, I, Address from a instruction.
  */
 
 public class instructionDecoder {
     private int opcode, I, R, IX, address;
+    private static Map<Integer, String> opcodeInstructMap = new HashMap<>();
 
     public instructionDecoder(){
         opcode = 0;
@@ -13,7 +17,10 @@ public class instructionDecoder {
         IX = 0;
         I = 0;
         address = 0;
+        initializeMap();
     }
+
+
 
     /**
      * This is a helper method to ture a decimal integer into a 16-bits binary String
@@ -21,7 +28,17 @@ public class instructionDecoder {
      * @return a 16-bits binary String with possible leading zeros
      */
     private String toBinaryString16bits(int value){
-        String binaryString = Integer.toBinaryString(value);
+//        String binaryString = Integer.toBinaryString(value);
+//        int zerosNeeded = 16 - binaryString.length();
+//
+//        StringBuilder result = new StringBuilder();
+//        for (int i = 0; i < zerosNeeded; i++) {
+//            result.append("0");
+//        }
+//        result.append(binaryString);
+//        return result.toString();
+        String binaryString = Integer.toBinaryString(value & 0xFFFF);
+
         int zerosNeeded = 16 - binaryString.length();
 
         StringBuilder result = new StringBuilder();
@@ -29,6 +46,7 @@ public class instructionDecoder {
             result.append("0");
         }
         result.append(binaryString);
+
         return result.toString();
     }
 
@@ -86,7 +104,7 @@ public class instructionDecoder {
             System.out.println("Error!!!! ry must be 0 or 2!!!");
             return -1;
         }
-        return R;
+        return IX;
     }
     public String toBinaryStringWithLeadingZeros(int decimalValue, int length) {
         String binaryString = Integer.toBinaryString(decimalValue);
@@ -122,5 +140,41 @@ public class instructionDecoder {
         IX = 0;
         I = 0;
         address = 0;
+    }
+
+    public String currentInstructString(){
+        return opcodeInstructMap.get(opcode);
+    }
+    //easy for debug
+    private void initializeMap() {
+        opcodeInstructMap.put( 1,"LDR");
+        opcodeInstructMap.put( 2,"STR");
+        opcodeInstructMap.put( 3,"LDA");
+        opcodeInstructMap.put(4,"LDX" );
+        opcodeInstructMap.put(5,"STX" );
+        opcodeInstructMap.put(36,"SETCCE");
+        opcodeInstructMap.put(6,"JZ");
+        opcodeInstructMap.put(7,"JNE");
+        opcodeInstructMap.put(8,"JCC");
+        opcodeInstructMap.put(9,"JMA");
+        opcodeInstructMap.put(10,"JSR");
+        opcodeInstructMap.put(11,"RFS");
+        opcodeInstructMap.put(12,"SOB");
+        opcodeInstructMap.put(13,"JGE");
+        opcodeInstructMap.put(14,"AMR");
+        opcodeInstructMap.put(15,"SMR");
+        opcodeInstructMap.put(16,"AIR");
+        opcodeInstructMap.put(17,"SIR");
+        opcodeInstructMap.put(18,"MLT");
+        opcodeInstructMap.put(19,"DVD");
+        opcodeInstructMap.put(20,"TRR");
+        opcodeInstructMap.put(21,"AND");
+        opcodeInstructMap.put(22,"ORR");
+        opcodeInstructMap.put(23,"NOT");
+        opcodeInstructMap.put(24,"SRC");
+        opcodeInstructMap.put(25,"RRC");
+        opcodeInstructMap.put(26,"IN" );
+        opcodeInstructMap.put(27,"OUT");
+
     }
 }

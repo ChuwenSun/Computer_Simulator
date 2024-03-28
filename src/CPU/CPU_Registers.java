@@ -30,8 +30,8 @@ public class CPU_Registers {
         cc2 = new CC(false);
         cc3 = new CC(false);
 
-        R1 = new GPR("R0",0);
-        R0 = new GPR("R1",0);
+        R0 = new GPR("R0",0);
+        R1 = new GPR("R1",0);
         R2 = new GPR("R2",0);
         R3 = new GPR("R3",0);
 
@@ -92,6 +92,18 @@ public class CPU_Registers {
             default -> {
                 System.out.println("Invalid range of CC, a FAKE CC register is returned");
                 yield new CC(false);
+            }
+        };
+    }
+
+    public void setCC(int i, boolean value){
+        switch (i) {
+            case 0 -> cc0.set(value);
+            case 1 -> cc1.set(value);
+            case 2 -> cc2.set(value);
+            case 3 -> cc3.set(value);
+            default -> {
+                System.out.println("Invalid range of CC, No register is set");
             }
         };
     }

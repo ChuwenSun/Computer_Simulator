@@ -76,16 +76,21 @@ public class Cache {
     }
 
     public String toBinaryStringWithLeadingZeros(int value) {
-        String binaryString = Integer.toBinaryString(value);
-        int zerosNeeded = 16 - binaryString.length();
+        final String binaryString;
+        if (value < 0) {
+            binaryString = Integer.toBinaryString((1 << sizeCache) + value);
+        } else {
+            binaryString = Integer.toBinaryString(value);
+        }
 
+        int zerosNeeded = sizeCache - binaryString.length();
         StringBuilder result = new StringBuilder();
+
         for (int i = 0; i < zerosNeeded; i++) {
             result.append("0");
         }
         result.append(binaryString);
-
-        return result.toString();
+        return result.length() > sizeCache ? result.substring(result.length() - sizeCache) : result.toString();
     }
 
     public void updateCacheConsole(JTextArea cacheConsole){
@@ -94,9 +99,9 @@ public class Cache {
         String formattedDateTime = now.format(formatter);
         cacheConsole.setText("[ " + formattedDateTime + " ] CURRENT STATE OF CACHE:\n");
         cacheBlocks.forEach((key, value) -> {
-            System.out.println();
-            System.out.println(key);
-            System.out.print(value);
+//            System.out.println();
+//            System.out.println(key);
+//            System.out.print(value);
             cacheConsole.append(key + ": [");
             value.forEach(number -> cacheConsole.append(toBinaryStringWithLeadingZeros(number) + " "));
             cacheConsole.append("]\n");

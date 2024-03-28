@@ -33,6 +33,6 @@ public class OctalDocumentFilter extends DocumentFilter {
     }
 
     private boolean isOctal(String text) {
-        return text.matches("[0-7]*");
+        return text.matches("-?[0-7]*");
     }
 }

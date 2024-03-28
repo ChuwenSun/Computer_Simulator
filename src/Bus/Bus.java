@@ -6,6 +6,8 @@ import GUI.IO_Devices;
 import Memory.Memory;
 
 import javax.swing.*;
+import java.io.*;
+import java.util.Map;
 
 /**
  * The Bus Class that is responsible for Run(), Step() and Halt().
@@ -15,12 +17,24 @@ public class Bus {
     private Memory memory;
     private boolean isHalt;
 
+    private File file;
+    private PrintWriter debugPrinter;
     private IO_Devices keyboardIO = new IO_Devices("Keyboard");
     private JTextArea outputConsole;
     public Bus(CPU_Registers CPU, Memory memory){
         this.CPU = CPU;
         this.memory = memory;
         this.isHalt = false;
+        try {
+            this.file = new File("debug/debug.txt");
+//            System.out.println("Writing to: " + file.getAbsolutePath());
+            this.debugPrinter = new PrintWriter(this.file);
+            debugPrinter.println("Im IN!");
+            debugPrinter.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred while trying to write to the file.");
+            e.printStackTrace();
+        }
     }
 
     public void setOutputConsole(JTextArea outputConsole){
@@ -72,26 +86,55 @@ public class Bus {
      * 2. Switch statement to do specific instruction based on opcode(We only have Load and Store in this part of project)
      */
     private void executeInstruction(instructionDecoder decoder) {
+        System.out.println("IX 1 register value before " + decoder.currentInstructString() + ": " + CPU.getIX(1).getValue());
         int ea = decoder.getAddress();
+        System.out.println("running " + decoder.currentInstructString() + " " + decoder.getR() + ", " + decoder.getIX() + ", " + decoder.getAddress() + ", " + decoder.getI());
+//        System.out.println("R: " + decoder.getR());
+//        System.out.println("IX: " + decoder.getIX());
+//        System.out.println("Add: " + decoder.getAddress());
+//        System.out.println("I: " + decoder.getI());
         // I == 0, direct addressing
         if (decoder.getI() == 0){
             //get the value from corresponding IX register and modify EA
             if(decoder.getIX() > 0){
-                ea += CPU.getIX(decoder.getIX()).getValue();
+                ea = memory.get(decoder.getAddress()) + CPU.getIX(decoder.getIX()).getValue();
+            }else if(decoder.getIX() == 0){
+                ea = memory.get(decoder.getAddress());
             }
             //I == 1, indirect addressing
         }else if(decoder.getI() == 1){
             //IX == 0, get value from the memory(EA)
             if(decoder.getIX() == 0){
-                ea = memory.get(ea);
+                ea = memory.get(memory.get(decoder.getAddress()));
             //IX != 0, modify EA by getting value from memory(EA)
             }else{
-                ea = memory.get(ea + CPU.getIX(decoder.getIX()).getValue());
+//                System.out.println("address: " + ea);
+//                System.out.println("IX value: " + CPU.getIX(decoder.getIX()).getValue());
+                System.out.println("memory.get(decoder.getAddress()): " + memory.get(decoder.getAddress()));
+                System.out.println("CPU.getIX(decoder.getIX()).getValue(): " + CPU.getIX(decoder.getIX()).getValue());
+                System.out.println("EA: memory.get(memory.get(decoder.getAddress()) + CPU.getIX(decoder.getIX()).getValue()): " + memory.get(memory.get(decoder.getAddress()) + CPU.getIX(decoder.getIX()).getValue()));
+
+                ea = memory.get(memory.get(decoder.getAddress()) + CPU.getIX(decoder.getIX()).getValue());
             }
         }else{
             System.out.println("I is not 0/1, invalid I value");
         }
+        try {
+            this.file = new File("debug/debug.txt");
+            System.out.println("Writing to: " + file.getAbsolutePath());
+            FileWriter fileWriter = new FileWriter(file, true);
 
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+
+            // Append a new line to the file
+            printWriter.println("line " + (CPU.PC.getValue() - 1) + "  Opcode: " + decoder.getOpcode() + "  EA cal: " + ea);
+            // Close PrintWriter when done to flush and release resources
+            printWriter.close();
+        }  catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("EA: " + ea);
         //Load and Store instuctions actual execution phase based on opcode
         switch (decoder.getOpcode()){
             case 0: {
@@ -116,7 +159,10 @@ public class Bus {
             }
             //Opcode 04, LDX, Xx <- c(EA)
             case 4: {
-                CPU.getIX(decoder.getIX()).setValue(memory.get(ea));
+//
+//                CPU.getIX(decoder.getIX()).setValue(memory.get(ea));
+                CPU.getIX(decoder.getIX()).setValue(memory.get(decoder.getAddress()));
+//                System.out.println("LDX updated IX with" + memory.get(ea) + " from " + ea);
                 break;
             }
             //Opcode 05, STX, Memory(EA) <- c(Xx)
@@ -148,9 +194,10 @@ public class Bus {
             //JNE
             case 7: {
                 if (!CPU.getCC(3).get()){
+                    System.out.println("JNE ran! ea =  " + ea);
                     CPU.PC.setValue(ea);
                 }else{
-
+                    System.out.println("JNE did not ran! ea =  " + ea);
                 }
                 break;
             }
@@ -163,6 +210,7 @@ public class Bus {
             //Else PC <- PC + 1
             case 8: {
                 if (CPU.getCC(decoder.getR()).get()){
+
                     CPU.PC.setValue(ea);
                 }else{
 
@@ -211,52 +259,70 @@ public class Bus {
             }
             //Opcode 16(14 in decimal), AMR
             case 14:{
-                int result = CPU.getR(decoder.getR()).getValue() + memory.get(ea);
-//                if (result > ), Java Integer will overflow first, so no need to set OVERFLOW flag here
-                CPU.getR(decoder.getR()).setValue(result);
+                long val1 = CPU.getR(decoder.getR()).getValue();
+                long val2 = memory.get(ea);
+                long result = val1 + val2;
+                if (result > Integer.MAX_VALUE){
+                    CPU.setCC(0, true);
+                    System.out.println("AMR OVERFLOW.");
+                }else {
+                    CPU.getR(decoder.getR()).setValue(CPU.getR(decoder.getR()).getValue() + memory.get(ea));
+                }
+
                 break;
             }
             //Opcode 17(15 in decimal), SMR
             case 15:{
-                int result = CPU.getR(decoder.getR()).getValue() - memory.get(ea);
-                if (result < 0){
+                long val1 = CPU.getR(decoder.getR()).getValue();
+                long val2 = memory.get(ea);
+                long result = val1 - val2;
+                if (result < Integer.MIN_VALUE){
                     //UNDERFLOW
                     CPU.getCC(1).set(true);
+                    System.out.println("SMR UNDERFLOW.");
                 }else {
-                    CPU.getR(decoder.getR()).setValue(result);
+                    CPU.getR(decoder.getR()).setValue(CPU.getR(decoder.getR()).getValue() - memory.get(ea));
                 }
                 break;
             }
             //Opcode 20(16 in decimal), AIR
             case 16:{
-                CPU.getR(decoder.getR()).setValue(CPU.getR(decoder.getR()).getValue() + decoder.getAddress());
+                long val1 = CPU.getR(decoder.getR()).getValue();
+                long val2 = decoder.getAddress();
+                long result = val1 + val2;
+                if (result > Integer.MAX_VALUE){
+                    CPU.setCC(0, true);
+                    System.out.println("AIR OVERFLOW.");
+                }else {
+                    CPU.getR(decoder.getR()).setValue(CPU.getR(decoder.getR()).getValue() + decoder.getAddress());
+                }
                 break;
             }
             //Opcode 21(17 in decimal), SIR
             case 17:{
-                int result = CPU.getR(decoder.getR()).getValue() - decoder.getAddress();
-                if (result < 0){
-                    //UNDERFLOW
-                    CPU.getCC(1).set(true);
-                }else{
-                    CPU.getR(decoder.getR()).setValue(result);
+                long val1 = CPU.getR(decoder.getR()).getValue();
+                long val2 = decoder.getAddress();
+                long result = val1 - val2;
+                if (result < Integer.MIN_VALUE){
+                    CPU.setCC(1, true);
+                    System.out.println("SIR UNDERFLOW.");
+                }else {
+                    CPU.getR(decoder.getR()).setValue(CPU.getR(decoder.getR()).getValue() - decoder.getAddress());
                 }
                 break;
             }
             //Opcode 22(18 in decimal), MLT
             case 18: {
-                // Perform the multiplication using long to avoid overflow within the operation itself
                 long result = (long) CPU.getR(decoder.getRx(true)).getValue() * CPU.getR(decoder.getRy(true)).getValue();
 
-                // Convert the result to a binary string with leading zeros to ensure it's properly formatted
-                 // Use 64 bits to ensure no data loss
 
-                // Check if the binary string length exceeds 32 bits for the actual result
                 if (result > 0xFFFFFFFFL) {
+                    System.out.println("MLT OVERFLOW.");
                     CPU.getCC(0).set(true);
+
+
                 } else {
                     String fullBinaryStr = toBinaryStringWithLeadingZeros(result, 32);
-                    // Split the 32-bit result into two 16-bit parts and set them into the registers
                     CPU.getR(decoder.getRx(true)).setValue(Integer.parseInt(fullBinaryStr.substring(0, 16), 2));
                     CPU.getR(decoder.getRx(true) + 1).setValue(Integer.parseInt(fullBinaryStr.substring(16, 32), 2));
                 }
@@ -266,6 +332,7 @@ public class Bus {
             case 19: {
                 if (CPU.getR(decoder.getRy(true)).getValue() == 0){
                     CPU.getCC(2).set(true);
+                    System.out.println("SIR DIVISION BY ZERO.");
                 }else {
                     int quotient = CPU.getR(decoder.getRx(true)).getValue() / CPU.getR(decoder.getRy(true)).getValue();
                     int reminder = CPU.getR(decoder.getRx(true)).getValue() % CPU.getR(decoder.getRy(true)).getValue();
@@ -278,8 +345,10 @@ public class Bus {
             case 20: {
                 if (CPU.getR(decoder.getRx(false)).getValue() == CPU.getR(decoder.getRy(false)).getValue()){
                     CPU.getCC(3).set(true);
+                    System.out.println("TRR see equal, cc equal set true");
                 }else{
                     CPU.getCC(3).set(false);
+                    System.out.println("TRR see equal, cc equal set false");
                 }
                 break;
             }
@@ -303,68 +372,124 @@ public class Bus {
             }
             //Opcode 30(24 in decimal), SRC
             case 24:{
+//                int value = CPU.getR(decoder.getR()).getValue();
+//                int count = decoder.getCount();
+//                if(!decoder.getAorL()){
+//
+//                    if (decoder.getLorR()){
+//                        //Arithmetically left shift
+//                        String binaryStr = toTwosComplementString16(value);
+//                        String signBit = binaryStr.substring(0, 1);
+//                        binaryStr = binaryStr.substring(1,16);
+//                        for(int i = 0; i < count; i++){
+//                            binaryStr = binaryStr + "0";
+//                        }
+//                        value = Integer.valueOf(signBit + binaryStr.substring(count), 2);
+//                    }else if(!decoder.getLorR()){
+//                        //Arithmetically right shift
+//                        String binaryStr = toTwosComplementString16(value);
+//                        String signBit = binaryStr.substring(0, 1);
+//                        binaryStr = binaryStr.substring(1,16);
+//                        for(int i = 0; i < count; i++){
+//                            binaryStr = "0" + binaryStr;
+//                        }
+//                        value = Integer.valueOf(signBit + binaryStr.substring(0, 15), 2);
+//                    }
+//
+//                }else if(decoder.getAorL()){
+//                    if(decoder.getLorR()){
+//                        //Logically left shift
+//                        String binaryStr = toTwosComplementString16(value);
+//                        for(int i = 0; i < count; i++){
+//                            binaryStr = binaryStr + "0";
+//                        }
+//                        value = Integer.valueOf(binaryStr.substring(count),2);
+//                    }else if(!decoder.getLorR()){
+//                        //Logically right shift
+//                        String binaryStr = toTwosComplementString16(value);
+//                        for(int i = 0; i < count; i++){
+//                            binaryStr = "0" + binaryStr;
+//                        }
+//                        value = Integer.valueOf(binaryStr.substring(0, 16),2);
+//                    }
+//                }
+//                CPU.getR(decoder.getR()).setValue(value);
+
+
                 int value = CPU.getR(decoder.getR()).getValue();
-                int count = decoder.getCount();
-                if(!decoder.getAorL()){
-
-                    if (decoder.getLorR()){
-                        //Arithmetically left shift
-                        String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
-                        String signBit = binaryStr.substring(0, 1);
-                        binaryStr = binaryStr.substring(1,16);
-                        for(int i = 0; i < count; i++){
-                            binaryStr = binaryStr + "0";
-                        }
-                        value = Integer.valueOf(signBit + binaryStr.substring(count), 2);
-                    }else if(!decoder.getLorR()){
-                        //Arithmetically right shift
-                        String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
-                        String signBit = binaryStr.substring(0, 1);
-                        binaryStr = binaryStr.substring(1,16);
-                        for(int i = 0; i < count; i++){
-                            binaryStr = "0" + binaryStr;
-                        }
-                        value = Integer.valueOf(signBit + binaryStr.substring(0, 15), 2);
-                    }
-
-                }else if(decoder.getAorL()){
-                    if(decoder.getLorR()){
-                        //Logically left shift
-                        String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
-                        for(int i = 0; i < count; i++){
-                            binaryStr = binaryStr + "0";
-                        }
-                        value = Integer.valueOf(binaryStr.substring(count),2);
-                    }else if(!decoder.getLorR()){
-                        //Logically right shift
-                        String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
-                        for(int i = 0; i < count; i++){
-                            binaryStr = "0" + binaryStr;
-                        }
-                        value = Integer.valueOf(binaryStr.substring(0, 16),2);
-                    }
-                }
-                CPU.getR(decoder.getR()).setValue(value);
+                int count = decoder.getCount(); // Assume this gives a value between 0 and 15
+//
+//                if (count > 0) { // If count is 0, no shift occurs
+//                    if (decoder.getAorL()) {
+//                        // Logical Shift
+//                        if (decoder.getLorR()) {
+//                            // Logical left shift
+//                            value = value << count;
+//                        } else {
+//                            // Logical right shift
+//                            value = value >>> count;
+//                        }
+//                    } else {
+//                        // Arithmetic Shift
+//                        if (decoder.getLorR()) {
+//                            // Arithmetic left shift
+//                            value = value << count;
+//                        } else {
+//                            // Arithmetic right shift
+//                            value = value >> count;
+//                        }
+//                    }
+//                    // Mask the value to simulate a 16-bit register (in case of overflow)
+//                    value = value & 0xFFFF;
+//                }
+                CPU.getR(decoder.getR()).setValue(shift(value, count, decoder.getLorR(), decoder.getAorL()));
                 break;
             }
             //Opcode 31(25 in decimal), RRC
             case 25:{
+
                 int value = CPU.getR(decoder.getR()).getValue();
-                int count = decoder.getCount();
-                String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
+                int count = decoder.getCount(); // Assumes this returns a value between 0 and 15.
 
+                ;
+//                if (count > 0) { // If count is 0, no rotation occurs
+//                    for (int i = 0; i < count; i++) {
+//                        if (decoder.getLorR()) {
+//                            // Rotate left
+//                            boolean msb = (value & 0x8000) != 0; // Check if the MSB is 1.
+//                            value = (value << 1) & 0xFFFF; // Left shift and mask to maintain 16-bit value.
+//                            if (msb) {
+//                                value |= 0x0001; // Rotate the MSB to the LSB.
+//                            }
+//                        } else {
+//                            // Rotate right
+//                            boolean lsb = (value & 0x0001) != 0; // Check if the LSB is 1.
+//                            value = (value >> 1) & 0x7FFF; // Right shift and mask to maintain 16-bit value and clear the MSB.
+//                            if (lsb) {
+//                                value |= 0x8000; // Rotate the LSB to the MSB.
+//                            }
+//                        }
+//                    }
+//                }
 
-                for(int i = 0; i < count; i++){
-                    if(decoder.getLorR()){
-                        // Left rotate
-                        binaryStr = binaryStr.substring(1) + binaryStr.charAt(0);
-                    }else{
-                        // Right rotate
-                        binaryStr = binaryStr.charAt(15) + binaryStr.substring(0, 15);
-                    }
-                }
-                value = Integer.parseInt(binaryStr, 2);
-                CPU.getR(decoder.getR()).setValue(value);
+                CPU.getR(decoder.getR()).setValue(shift(value, count, decoder.getLorR(), decoder.getAorL()));
+
+//                int value = CPU.getR(decoder.getR()).getValue();
+//                int count = decoder.getCount();
+//                String binaryStr = toBinaryStringWithLeadingZeros(value, 16);
+//
+//
+//                for(int i = 0; i < count; i++){
+//                    if(decoder.getLorR()){
+//                        // Left rotate
+//                        binaryStr = binaryStr.substring(1) + binaryStr.charAt(0);
+//                    }else{
+//                        // Right rotate
+//                        binaryStr = binaryStr.charAt(15) + binaryStr.substring(0, 15);
+//                    }
+//                }
+//                value = Integer.parseInt(binaryStr, 2);
+//                CPU.getR(decoder.getR()).setValue(value);
                 break;
             }
             //Opcode 32(26 in decimal), IN
@@ -378,13 +503,13 @@ public class Bus {
             //Opcode 33(27 in decimal), OUT
             case 27:{
                 int value = CPU.getR(decoder.getR()).getValue();
-                outputConsole.append("OUT: " + Integer.toString(value) + "\n");
+                outputConsole.append("OUT: " + Integer.toString(value) + "    ");
                 break;
             }
             default:
                 break;
         }
-
+        System.out.println("IX 1 register value after " + decoder.getOpcode() + " instruct: " + CPU.getIX(1).getValue());
 
 
 
@@ -401,6 +526,33 @@ public class Bus {
         result.append(binaryString);
 
         return result.toString();
+    }
+
+    public String toTwosComplementString16(int decimalValue) {
+        int maskedValue = decimalValue & 0xFFFF;
+
+        return String.format("%16s", Integer.toBinaryString(maskedValue)).replace(' ', '0');
+    }
+
+    private int shift(int value, int count, boolean leftOrRight, boolean logicalOrArithmetic) {
+        String binaryString = Integer.toBinaryString(0xFFFF & value);
+        binaryString = String.format("%16s", binaryString).replace(' ', '0');
+
+        if (leftOrRight) { // Left shift
+            String shifted = binaryString.substring(count) + "0".repeat(count);
+            return Integer.parseInt(shifted.substring(0, 16), 2);
+        } else { // Right shift
+            if (logicalOrArithmetic) { // Logical
+                String shifted = "0".repeat(count) + binaryString;
+                return Integer.parseInt(shifted.substring(0, 16), 2);
+            } else { // Arithmetic
+                // Preserve the sign bit for arithmetic shift
+                char sign = binaryString.charAt(0);
+                String shifted = binaryString.substring(0, count).replace('0', sign) + binaryString;
+                shifted = shifted.substring(0, 16); // Ensure it's still 16 bits
+                return Integer.parseInt(shifted, 2) - (sign == '1' ? 0x10000 : 0); // Adjust for sign if necessary
+            }
+        }
     }
     public void resetBus(){
         isHalt = false;

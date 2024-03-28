@@ -7,6 +7,8 @@ import javax.swing.text.AbstractDocument;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.stream.Collectors;
+
 /**
  * The GUI class is the responsible for all the front-end behaviors, it includes all the Java front-end component.
  * Front-end Layout is included in GUI.form
@@ -154,21 +156,53 @@ public class GUI {
      *
      */
     public static String binaryToOctal(String binaryStr) {
-        int binaryLen = binaryStr.length();
-        StringBuilder octalStr = new StringBuilder();
+//        int binaryLen = binaryStr.length();
+//        StringBuilder octalStr = new StringBuilder();
+//
+//        int padding = 3 - (binaryLen % 3);
+//        if (padding != 3) {
+//            binaryStr = "0".repeat(padding) + binaryStr;
+//        }
+//
+//        for (int i = 0; i < binaryStr.length(); i += 3) {
+//            String threeBits = binaryStr.substring(i, i + 3);
+//            int octalDigit = Integer.parseInt(threeBits, 2);
+//            octalStr.append(octalDigit);
+//        }
+//
+//        return octalStr.toString();
+        binaryStr = String.format("%16s", binaryStr).replace(' ', '0');
 
-        int padding = 3 - (binaryLen % 3);
-        if (padding != 3) {
-            binaryStr = "0".repeat(padding) + binaryStr;
+        boolean isNegative = binaryStr.charAt(0) == '1';
+
+        String octalStr;
+        if (isNegative) {
+            String positiveBinary = convertFromTwosComplement(binaryStr);
+            int decimal = Integer.parseInt(positiveBinary, 2);
+            octalStr = Integer.toOctalString(decimal);
+            octalStr = "-" + octalStr;
+        } else {
+            int decimal = Integer.parseInt(binaryStr, 2);
+            octalStr = Integer.toOctalString(decimal);
         }
 
-        for (int i = 0; i < binaryStr.length(); i += 3) {
-            String threeBits = binaryStr.substring(i, i + 3);
-            int octalDigit = Integer.parseInt(threeBits, 2);
-            octalStr.append(octalDigit);
+        return octalStr;
+    }
+
+    private static String convertFromTwosComplement(String binaryStr) {
+        String inverted = binaryStr.chars()
+                .mapToObj(c -> c == '1' ? "0" : "1")
+                .collect(Collectors.joining());
+
+        long decimal = Long.parseLong(inverted, 2) + 1;
+        String positiveBinary = Long.toBinaryString(decimal);
+
+        positiveBinary = String.format("%16s", positiveBinary).replace(' ', '0');
+        if (positiveBinary.length() > 16) {
+            positiveBinary = positiveBinary.substring(positiveBinary.length() - 16);
         }
 
-        return octalStr.toString();
+        return positiveBinary;
     }
 
     /**
@@ -179,16 +213,64 @@ public class GUI {
      */
     public static String octalToBinary(String octalStr) {
         StringBuilder binaryStr = new StringBuilder();
+        boolean isNegative = octalStr.startsWith("-");
+
+        if (isNegative) {
+            octalStr = octalStr.substring(1); // Remove the leading '-' for processing
+        }
+
+        if (octalStr.contains("-")) {
+            return ""; // Invalid string due to internal '-' characters
+        }
 
         for (int i = 0; i < octalStr.length(); i++) {
             int octalDigit = Character.digit(octalStr.charAt(i), 8);
             String binaryGroup = Integer.toBinaryString(octalDigit);
-
-            String paddedBinaryGroup = "0".repeat(3 - binaryGroup.length()) + binaryGroup;
-            binaryStr.append(paddedBinaryGroup);
+            binaryStr.append(String.format("%3s", binaryGroup).replace(' ', '0'));
         }
 
-        return binaryStr.toString();
+        String resultBinary = binaryStr.toString();
+        // Ensure the binary string is 16 bits
+        resultBinary = String.format("%16s", resultBinary).replace(' ', '0');
+
+        if (isNegative) {
+            resultBinary = toTwosComplement(resultBinary);
+        }else{
+            resultBinary = resultBinary.replaceFirst("^0+(?!$)", "");
+        }
+
+        return resultBinary;
+//        StringBuilder binaryStr = new StringBuilder();
+//
+//        for (int i = 0; i < octalStr.length(); i++) {
+//            int octalDigit = Character.digit(octalStr.charAt(i), 8);
+//            String binaryGroup = Integer.toBinaryString(octalDigit);
+//
+//            String paddedBinaryGroup = "0".repeat(3 - binaryGroup.length()) + binaryGroup;
+//            binaryStr.append(paddedBinaryGroup);
+//        }
+//
+//        return binaryStr.toString();
+    }
+
+    private static String toTwosComplement(String binaryStr) {
+        // Invert bits
+        binaryStr = binaryStr.replaceAll("0", "x").replaceAll("1", "0").replaceAll("x", "1");
+
+        // Add 1 to the result
+        int length = binaryStr.length();
+        StringBuilder result = new StringBuilder(binaryStr);
+        boolean carry = true;
+        for (int i = length - 1; i >= 0 && carry; i--) {
+            if (result.charAt(i) == '1') {
+                result.setCharAt(i, '0');
+            } else {
+                result.setCharAt(i, '1');
+                carry = false;
+            }
+        }
+
+        return result.toString();
     }
 
     /**
@@ -255,10 +337,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getSource() == testBtn) {
-                    keyboardIO.askForInput("Please input a value: ");
-                    String input = keyboardIO.getValue();
-                    int decimalValue = Integer.parseInt(input);
-                    outputConsole.setText(Integer.toString(decimalValue));
+                    simulator.memory.printAllMemoryValues();
                 }
             }
         }));
