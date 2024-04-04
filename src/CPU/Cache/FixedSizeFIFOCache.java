@@ -2,6 +2,10 @@ package CPU.Cache;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+/**
+ * This is the FixedSizeFIFOCache Map class. It will provide FIFO functionality for cacheBlocks in Cache.
+ *
+ */
 public class FixedSizeFIFOCache<K, V> extends LinkedHashMap<K, V> {
     private final int capacity;
 

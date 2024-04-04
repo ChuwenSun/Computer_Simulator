@@ -1,0 +1,86 @@
+LOC 6     
+Data 20	//store 20 at LOC 6(limit of loop)
+Data 0	//store the counter of loop(starting at 0) at LOC 7
+Data 500  // store the beginning of the 20-number array at LOC 8(500 to 519)
+Data 7	// LOC 9 stores the LOC of loop counter
+Data 6	// LOC 10 stores the LOC of limit of loop
+Data 8  // LOC 11 stores the place that store start of array
+Data 30	// LOC 12 stores the start of first loop
+Data 47 // LOC 13 stores the start of the second loop
+Data 520 //LOC 14 stores where is the compare number(2nd input)
+Data 521 //LOC 15 stores where to store the difference temporarily
+Data 522 //LOC 16 stores where to store the smallest difference
+Data 523 //LOC 17 stores where to store the answer
+Data 78	//LOC 18 stores a position for JZ
+Data 87	//LOC 19 stores a position for JZ
+Data 69	//LOC 20 stores a position for JNE
+Data 524	//LOC 21 store where to store abs(difference)
+LOC 30    //start of the loop
+IN 0, 0	  //Get a input number into R0
+STR 0, 1, 8   // Store the number in R0 into the array starting at LOC 500, IX 1 contains loop counter, which is also the length of the array
+LDR 1, 0, 9	// Load value in LOC 7 into R1, which is the loop counter and the length of the array
+AIR 1, 1	// Add 1 to R1(increment loop counter)
+STR 1, 0, 9	// Store Loop counter, length of the array back to LOC 7(Loop counter, length of array updated)
+LDX 1, 7	//Update IX 1
+LDR 2, 0, 10	// Load value in LOC 6(limit of loop:20) into R2
+LDR 3, 0, 9	// Load value in LOC 7(loop counter, length of array) into R3
+TRR 2, 3	//Test the equality of R2, R3(see if (loop counter == loop limit) )
+JNE 0, 12	//If not equal(loop not ending), jump back to LOC 30(start of the loop)
+SETCCE 1	//clear E bit of Condition code
+SIR 1, 20	//clear R1, reset to 0
+SIR 2, 20	//clear R2, reset to 0 
+SIR 3, 20	//clear R3, reset to 0
+STR 1, 0, 9	//clear Loop Counter at LOC 7
+LDR 0, 0, 9	//clear R0 with value 0 in LOC 7
+LDX 1, 7	//clear IX 1 with value 0 in LOC 7
+LDR 0, 1, 8	//Load value in array into R0, IX 1 represent the index
+OUT 0, 1	//Print Out the Number to Console Printer
+LDR 1, 0, 9	// Store value in LOC 7 into R1, which is the loop counter
+AIR 1, 1	// Add 1 to R1(increment loop counter)
+STR 1, 0, 9	// Store Loop counter, length of the array back to LOC 7(Loop counter)
+LDX 1, 7	// Update IX 1
+LDR 2, 0, 10	// Load value in LOC 6(limit of loop:20) into R2
+LDR 3, 0, 9	// Load value in LOC 7(loop counter, length of array) into R3
+TRR 2, 3	//Test the equality of R2, R3(see if (loop counter == loop limit) )
+JNE 0, 13	//If not equal(loop not ending), jump back to LOC 47(start of the loop)
+SETCCE 1	//clear E bit of Condition code
+SIR 1, 20	//clear R1, reset to 0
+SIR 2, 20	//clear R2, reset to 0 
+SIR 3, 20	//clear R3, reset to 0
+STR 1, 0, 9	//clear Loop Counter at LOC 7
+LDR 0, 0, 7	//clear R0 with value 0 in LOC 7
+LDX 1, 7	//clear IX 1 with value 0 in LOC 7
+IN 0, 0	  //Get a input number into R0(To compare)
+STR 0, 0, 14  // Store the input number from R0 into LOC 520(EA = 14)
+SIR 1, 1	// R1 <= 0 - 1
+SRC 1, 1, 0, 1 // Logically right shift 1, so the result is the MAX_VALUE
+STR 1, 0, 16	//Store the MAX_VALUE as the temporary smallest difference
+LDR 0, 1, 8	//Load value in array into R0, IX 1 represent the index
+SMR 0, 0, 14 // Minus operation(array number - input number) => R0
+STR 0, 0, 15 // Store the difference into 521(EA = 15)
+SRC 0, 15, 0, 1 // Logical Right shift 15, the right most bit is the sign bit
+TRR 0, 3	// Test the equality between R0(the sign bit of difference) and R3(0)
+LDR 0, 0, 15 // Restore the difference before shifting
+JZ  0, 18	//  If positive, skip the next two lines
+NOT 0		// Flip all the bits
+AIR 0, 1	// Add 1 to R0, result is the abs(the negative difference)
+STR 0, 0, 21 // Store the abs difference into 524(EA = 21)
+SMR 0, 0, 16 //current difference - smallest difference
+SRC 0, 15, 0, 1 // Logical Right shift 15, the right most bit is the sign bit
+TRR 0, 3	// Test the equality between R0(the sign bit of difference) and R3(0)
+JZ 0, 19	//if not equal, we need to update the answer and the difference;so if equal, we skip next four lines
+LDR 0, 0, 21	//Load the abs difference into R0(EA = 21)
+STR 0, 0, 16	//Update the smallest difference
+LDR 0, 1, 8	//Load value in array into R0, IX 1 represent the index
+STR 0, 0, 17 // Update the answer
+LDR 1, 0, 9	// Store value in LOC 7 into R1, which is the loop counter
+AIR 1, 1	// Add 1 to R1(increment loop counter)
+STR 1, 0, 9	// Store Loop counter, length of the array back to LOC 7(Loop counter)
+LDX 1, 7	// Update IX 1
+LDR 0, 0, 10	// Load value in LOC 6(limit of loop:20) into R0
+LDR 1, 0, 9	// Load value in LOC 7(loop counter, length of array) into R1
+TRR 0, 1	//Test the equality of R0, R1(see if (loop counter == loop limit) )
+JNE 0, 20	//If not equal(loop not ending), jump back to LOC 69(start of the loop)
+LDR 0, 0 , 17 //Load the answer
+OUT 0, 1	// Print the answer
+End:    HLT

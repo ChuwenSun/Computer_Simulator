@@ -17,6 +17,10 @@ public class Cache {
     public FixedSizeFIFOCache<String, ArrayList<Integer>> cacheBlocks;
     final int sizeCache = 16;
     final int sizeLine = 8;
+    /**
+     * This is Instructor method to initialize the Cache. cacheBlocks will starts as a FIFO Map object.
+     * ArrayList<Integer> will be initialized within cacheBlocks as Blocks
+     */
     public Cache(){
         //the key Integer in this hashmap is the tag: key % 8 == 0
         this.cacheBlocks = new FixedSizeFIFOCache<>(16);
@@ -31,7 +35,12 @@ public class Cache {
         }
     }
 
-
+    /**
+     * This is the method to set a Value in the memory,
+     * input are memoryAddress and value and also the line of values in memory of this address
+     *
+     * @return the value set.
+     */
     public int setValue(int memoryAddress, int value, ArrayList<Integer> currentLine){
         String tag = getTag(memoryAddress);
         if (cacheBlocks.containsKey(tag)){
@@ -42,7 +51,13 @@ public class Cache {
         }
         return value;
     }
-
+    /**
+     * This is method to get a value from the memoryAddress, the memoryAddress and a currentLine ArrayList will be passed in
+     *
+     *
+     *
+     * @return the value in the memoryAddress
+     */
     public int getValue(int memoryAddress, ArrayList<Integer> currentLine){
         String tag = getTag(memoryAddress);
         int output = 0;
@@ -74,7 +89,11 @@ public class Cache {
         // Remove the last digit of the octal string
         return octalStr.substring(0, octalStr.length() - 1);
     }
-
+    /**
+     * Helper method to turn value into a 2's complement binary String
+     *
+     * @return 2's complement binary String of input value
+     */
     public String toBinaryStringWithLeadingZeros(int value) {
         final String binaryString;
         if (value < 0) {
@@ -92,7 +111,9 @@ public class Cache {
         result.append(binaryString);
         return result.length() > sizeCache ? result.substring(result.length() - sizeCache) : result.toString();
     }
-
+    /**
+     * Refresh the output console with the current state of the Cache
+     */
     public void updateCacheConsole(JTextArea cacheConsole){
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -108,7 +129,9 @@ public class Cache {
         });
 
     }
-
+    /**
+     * Reset the cache.
+     */
     public void resetCache(){
         cacheBlocks.clear();
         for(int i = 0; i < sizeCache; i++){

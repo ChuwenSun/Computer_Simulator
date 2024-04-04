@@ -60,7 +60,7 @@ public class Register {
     public int getValue(){ return value;}
 
     /**
-     * Set Method based on a binaryString
+     * Set Method based on a binaryString(2's complement)
      */
     public void setValue(String BinaryString){
         if (BinaryString.length() <= length) {

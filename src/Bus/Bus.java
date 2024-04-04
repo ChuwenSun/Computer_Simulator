@@ -84,6 +84,8 @@ public class Bus {
      * Execute the current instruction(info has been stored in decoder)
      * 1. firstly calculate EA using decoder
      * 2. Switch statement to do specific instruction based on opcode(We only have Load and Store in this part of project)
+     *
+     * A lot of instructions are added for Part 2.(Finished)
      */
     private void executeInstruction(instructionDecoder decoder) {
         System.out.println("IX 1 register value before " + decoder.currentInstructString() + ": " + CPU.getIX(1).getValue());
@@ -515,6 +517,9 @@ public class Bus {
 
 
     }
+    /**
+     * Helper method, simply filling leading 0s with the input length.
+     */
     public String toBinaryStringWithLeadingZeros(long value, int length) {
         String binaryString = Long.toBinaryString(value);
         int zerosNeeded = length - binaryString.length();
@@ -527,13 +532,19 @@ public class Bus {
 
         return result.toString();
     }
-
+    /**
+     * helper method for adding 2's complement to the project
+     */
     public String toTwosComplementString16(int decimalValue) {
         int maskedValue = decimalValue & 0xFFFF;
 
         return String.format("%16s", Integer.toBinaryString(maskedValue)).replace(' ', '0');
     }
 
+    /**
+     * shift() is the Main method to the RCC shift instruction. LeftOrRight, LogicalOrArithmetic are
+     * passed in as input and the method will take care of it
+     */
     private int shift(int value, int count, boolean leftOrRight, boolean logicalOrArithmetic) {
         String binaryString = Integer.toBinaryString(0xFFFF & value);
         binaryString = String.format("%16s", binaryString).replace(' ', '0');
@@ -554,6 +565,10 @@ public class Bus {
             }
         }
     }
+    /**
+     * resetBus() reset the isHalt back to false;
+     *
+     */
     public void resetBus(){
         isHalt = false;
     }

@@ -69,7 +69,6 @@ public class Memory{
         set(address, value);
     }
     public static int octalTo16Bit2sComplementInt(String octalStr) {
-        // Convert octal string to a decimal integer
         int decimalValue = Integer.parseInt(octalStr, 8);
 
         // Convert the decimal to a "regular" 16-bit binary string, with zero-padding if necessary
@@ -167,7 +166,6 @@ public class Memory{
     public void resetMem(){
         memory.clear();
         cache.resetCache();
-
     }
 
 
