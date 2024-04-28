@@ -498,14 +498,26 @@ public class Bus {
             case 26:{
                 keyboardIO.askForInput("Please input a value: ");
                 String input = keyboardIO.getValue();
-                int decimalValue = Integer.parseInt(input);
+                int ASCII_value = keyboardIO.getASCII_value();
+//                int decimalValue = Integer.parseInt(input);
+                int decimalValue = ASCII_value;
                 CPU.getR(decoder.getR()).setValue(decimalValue);
                 break;
             }
             //Opcode 33(27 in decimal), OUT
             case 27:{
                 int value = CPU.getR(decoder.getR()).getValue();
-                outputConsole.append("OUT: " + Integer.toString(value) + "    ");
+                char charValue = (char) value;
+                outputConsole.append("OUT(int): " + Integer.toString(value) + "    ");
+                outputConsole.append("OUT(char): " + charValue + "    ");
+                break;
+            }
+            //Opcode (28 in decimal),
+            case 28:{
+                keyboardIO.askForInput("Please input a value: ");
+                String input = keyboardIO.getValue();
+                int decimalValue = Integer.parseInt(input);
+                CPU.getR(decoder.getR()).setValue(decimalValue);
                 break;
             }
             default:

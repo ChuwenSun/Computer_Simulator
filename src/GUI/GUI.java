@@ -78,7 +78,9 @@ public class GUI {
     private JTextArea outputConsole;
     private JTextField inputField;
     private JButton testBtn;
+    private JButton btnSentenceFile;
     private JFileChooser IPLFileChooser = new JFileChooser();
+    private JFileChooser SentenceFileChooser = new JFileChooser();
     public GUI(){
 
     }
@@ -341,7 +343,26 @@ public class GUI {
                 }
             }
         }));
-
+        btnSentenceFile.addActionListener((new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == btnSentenceFile) {
+                    int select = SentenceFileChooser.showOpenDialog(null);
+                    if (select == SentenceFileChooser.APPROVE_OPTION) {
+                        File SentenceFile = SentenceFileChooser.getSelectedFile();
+                        System.out.println("IPL: " + SentenceFile.getName());
+                        //simulator = new Simulator();
+                        //refresh the computer whenever IPL is clicked
+//                        simulator.refreshSimulator();
+                        valueOctal.setText("");
+                        valueBinary.setText("");
+                        // Call the simulator to load memory with input file
+                        simulator.loadMemoryWithSentenceFile(SentenceFile);
+                        updateRegisterValues(simulator);
+                    }
+                }
+            }
+        }));
         btnHalt.addActionListener((new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

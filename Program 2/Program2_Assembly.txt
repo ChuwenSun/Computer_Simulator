@@ -1,0 +1,102 @@
+LOC 0	//starting to store data at LOC 0
+Data 78		// LOC 33 store the LOC of reset IX 2 jumper => LOC 0
+Data 81		// LOC 34 store the LOC of Jumper to test loop ending => LOC 1
+Data 65 	// LOC 35 store the Jumper for JNE, jump back to keep searching the paragraph => LOC 2
+Data 92		// LOC 36: Jumper if not period => LOC 3
+Data 98		// LOC 37: Jumper if not space => LOC 4
+Data 116	// LOC 38: Jumper if not found anything => LOC 5
+Data 500	// Store the start location of the search word buffer at LOC 6
+Data 10		// Store the LOC of length of the search word buffer at LOC 7
+Data 3		// Store the number 3(represents end of a word) at LOC 8
+Data 103		// Store the location of number 3 at LOC 9
+Data 0		// Store the length of the search word buffer at LOC 10
+Data 0		// Store 0 for reseting registers at LOC 11
+Data 11		// Store the LOC of value 0 at LOC 12
+Data 0		// Store a loop counter at LOC 13
+Data 13		// Store the LOC of loop counter at LOC 14
+Data 50		// LOC 15 store the 50 position for the first JNE to jump back to get input for another char
+Data 59		// LOC 16 store the 59 position for the first JZ to jump skip to the end of first loop which ends the INPUT from user
+Data 102	// LOC 17 store the 101 position for the second JNE to jump back to get another char to OUTPUT
+Data 600	// LOC 18 store the 600 position for the starting point of the paragraph buffer
+Data 0		// LOC 19 store the value of paragraph cursor(also the big loop counter)
+Data 0		// LOC 20 store the value of search word cursor
+Data 19		// LOC 21 store the LOC of paragraph cursor(also the big loop counter)
+Data 20		// LOC 22 store the LOC of search word cursor
+Data 0		// LOC 23 store the sentence counter
+Data 0		// LOC 24 store the word counter
+Data 23		// LOC 25 store the LOC of sentence counter
+Data 24		// LOC 26 store the LOC of word counter
+Data 46		// LOC 27 store the ASCII value of period
+Data 32		// LOC 28 store the ASCII value of space
+Data 27		// LOC 29 store the LOC of period
+Data 28		// LOC 30 store the LOC of space
+Data 4		// LOC 31 store the value 4(end of paragraph)
+Data 31		// LOC 32 store the LOC of value 4(end of paragraph) 
+LOC 50		//Starting the actual program at LOC 50
+LDA 3, 0, 8	// Load number 3 at LOC 8 into R3, to represent the end of a word
+IN 0, 0		//getting a input for one char
+STR 0, 1, 6	//Store the char from R0 into the search word buffer
+TRR 0, 3	//Test the equality of R0 and R3, which is the current input char and the end of word(number 3)
+JZ 0, 16	//Jump if equal: search word input is finished, we skip the next 3 lines
+AIR 1, 1	//Add 1 to R1, meaning the length of the search word
+STR 1, 0, 7	//Update the length of the search word
+LDX 1, 10	//Update IX 1
+JNE 0, 15	//Jump if not equal: search word input is not finished, we jump back the IN instruction and get more char until we get a end of word
+SETCCE 1	//clear E bit of Condition code
+LDR 0, 0, 12	//reset R0, with value 0 in LOC 11
+LDR 1, 0, 12	//reset R1, with value 0 in LOC 11
+LDR 2, 0, 12	//reset R2, with value 0 in LOC 11
+LDR 3, 0, 12	//reset R3, with value 0 in LOC 11
+LDX 1, 11	//clear IX 1 with value 0 in LOC 11
+LDR 0, 1, 18	//Load a char in the paragraph buffer into R0(IX 1: paragraph cursor)
+LDR 1, 2, 6	//Load a char in the search word into R1(IX 2: search word cursor)
+TRR 0, 1	//Check if this char is equal between paragraph cursor and search word cursor
+LDR 2, 0, 21	//Load the paragraph cursor(big loop counter into R2)
+AIR 2, 1	//add 1, increment the paragraph cursor(big loop counter)
+STR 2, 0, 21	//Store the paragraph cursor back to the location
+LDX 1, 19	//update IX 1: paragraph cursor
+JNE 0, 0	//if cursors do not match, we need to reset search word cursor: reset IX 2
+LDR 2, 0, 22	//Load the search word cursor into R2
+AIR 2, 1	//increment serach word cursor by 1
+STR 2, 0, 22	//Store this back, update search word cursor
+LDX 2, 20	//update IX2: search word cursor
+JZ 0, 1	//if cursors match, we do not reset any cursor, skip next section to check end of loop
+LDR 2, 0, 12	//load value 0 into R2(Starting to reset IX 2)
+STR 2, 0, 22	//Store value 0 in R2 into LOC 20, which is the search word cursor(reset to 0)
+LDX 2, 20	//Update IX 2 to 0
+LDR 3, 0, 7	//Load length of search word buffer into R3
+TRR 2, 3	//R2 = search word counter, R3 = search word length. Test equality to jump out loop
+JZ 0, 17	//We got the result, jump to print if equal
+LDR 3, 0, 29	//Load R3 with the ASCII value of a period
+TRR 0, 3	//Test the equality between R0 and R3
+JNE 0, 3	//Jump if not equal: if not a period, we skip next section
+LDR 3, 0, 25	//Load R3 with the sentence counter
+AIR 3, 1	//increment sentence counter if we see a period
+STR 3, 0, 25	//updated sentence counter
+LDR 3, 0, 12	//Load value 0 into R3
+STR 3, 0, 26	//Update 0 to the word counter
+LDR 3, 0, 30	//Load R3 with the ASCII value of a space
+TRR 0, 3	//Test if paragraph cursor in R0is a space
+JNE 0, 4		//Jump if not equal: if not a space, we skip next section
+LDR 3, 0, 26	//Load word counter into R3
+AIR 3, 1	//Increment
+STR 3, 0, 26	//Update word counter
+LDA 2, 0, 31	//Load R2 with the end of paragraph indicator
+TRR 0, 2	//Test if end of paragraph is reached
+JZ 0, 5	//End the program if no word is found
+JNE 0, 2	//JNE: 
+LDX 1, 11	//clear IX 1 with value 0 in LOC 11
+LDR 0, 1, 6	//Load char in search word buffer into R0
+OUT 0, 1	//Print one char
+LDR 1, 0, 14	//Load the loop counter at LOC 13 into R1
+AIR 1, 1	//Add 1 to R1(increment loop counter)
+STR 1, 0, 14	//Update loop counter
+LDX 1, 13	//Update IX
+LDR 2, 0, 7	//Store the length of the search word into R2
+TRR 1, 2	//Test the equality of the loop counter and the length of search word to see if end of search word is reached
+JNE 0, 9	//Jump if not equal: jump back to the LDR instruction to load the next char in the search word
+LDR 0, 0, 25	//Load R0 with the sentence counter
+OUT 0, 1	//Print the sentence counter
+LDR 0, 0, 26	//Load R0 with the word counter
+OUT 0, 1	//Print the word counter
+End:    HLT

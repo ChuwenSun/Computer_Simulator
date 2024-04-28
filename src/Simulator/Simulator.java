@@ -67,4 +67,28 @@ public class Simulator {
     public void getOutputConsole(JTextArea outputConsole) {
         bus.setOutputConsole(outputConsole);
     }
+
+    public void loadMemoryWithSentenceFile(File sentenceFile) {
+        try {
+            Scanner scanner = new Scanner(sentenceFile);
+            // read every line until it reaches the end
+            int paragraphCur = 600;
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                System.out.println("line length: " + line.length());
+                System.out.println();
+                for (char ch : line.toCharArray()){
+                    System.out.print(ch);
+                    memory.set(paragraphCur, (int) ch);
+                    paragraphCur++;
+                }
+                memory.set(paragraphCur, 4);
+            }
+//            memory.printAllMemoryValues();
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
 }
